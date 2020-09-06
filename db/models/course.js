@@ -1,4 +1,4 @@
-const {DataTypes} = require('sequelize');
+const {DataTypes, Sequelize} = require('sequelize');
 
 module.exports = (sequelize) => {
     class Course extends Sequelize.Model {}

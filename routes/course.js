@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const router = require = express.Router();
-const {Course} = db.models.Course;
+const {Course} = db.models;
 
 // Async/await middleware
 function asyncHandler(cb) {
@@ -11,7 +11,7 @@ function asyncHandler(cb) {
       } catch (err) {
         err = new Error();
         err.status = 500;
-        err.message = `Looks like the book you requested doesn't exist`;
+        err.message = `Looks like the course you requested doesn't exist`;
         next(err);
       }
     };
@@ -19,7 +19,8 @@ function asyncHandler(cb) {
 
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
 router.get('/courses', asyncHandler(async (req, res) => {
-
+  const courses = await Course.findAll();
+  res.json({courses})
 }));
 
 // GET /api/courses/:id 200 - Returns the course (including the user that owns the course) for the provided course ID
