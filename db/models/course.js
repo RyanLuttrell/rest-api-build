@@ -1,4 +1,5 @@
 const {DataTypes, Sequelize} = require('sequelize');
+const User = require('./user');
 
 module.exports = (sequelize) => {
     class Course extends Sequelize.Model {}
@@ -24,12 +25,5 @@ module.exports = (sequelize) => {
                 type: DataTypes.STRING
             }
         }, {sequelize});
-        Course.associate = (models) => {
-            Course.belongsTo(models.User, {
-                foreignKey: {
-                    fieldName: 'userId'
-                }
-            })
-        }
     return Course;
 }
