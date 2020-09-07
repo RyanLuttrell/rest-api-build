@@ -17,6 +17,7 @@ function asyncHandler(cb) {
     };
   }
 
+
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
 router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll();
@@ -35,19 +36,24 @@ router.post('/courses', asyncHandler(async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     estimatedTime: req.body.estimatedTime,
-    materialsNeeded: req.body.materialsNeeded
+    materialsNeeded: req.body.materialsNeeded,
+    userId: 2
   });
-  res.status(201);
+  res.status(201).end();
 }));
 
 // PUT /api/courses/:id 204 - Updates a course and returns no content
 router.put('/courses/:id', asyncHandler(async (req, res) => {
-
+  const course = await Course.findByPk(req.params.id)
+  await course.update(req.body)
+  res.status(204).end();
 }));
 
 // DELETE /api/courses/:id 204 - Deletes a course and returns no content
 router.delete('/courses/:id', asyncHandler(async (req, res) => {
-
+  const course = await Course.findByPk(req.params.id);
+  await course.destroy();
+  res.status(204).end();
 }));
 
 module.exports = router;
