@@ -1,3 +1,4 @@
+//Import all dependencies to insure the course route can operate properly
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
@@ -20,9 +21,12 @@ function asyncHandler(cb) {
     };
   }
 
+  //Middleware to authenticate the user for the API
   const userAuthentication = async (req, res, next) => {
     let message = null;
     const credentials = auth(req);
+
+    //Check to ensure that the user has input credentials
     if (credentials) {
       const user = await User.findOne({
         where: {
@@ -30,10 +34,13 @@ function asyncHandler(cb) {
         }
       })
       const password = user.password;
+
+      //Check to ensure that the username entered by the user matches an email in the database
       if (user) {
         const authenticated = bcrypt
           .compareSync(credentials.pass, password)
         
+        //Check to ensure that the password entered by the user matches the password in the database
         if (authenticated) {
           req.currentUser = user
         }  else {
@@ -79,17 +86,26 @@ router.post('/users', [
 ], asyncHandler(async (req, res) => {
 
   const errors = validationResult(req);
-
+  
+  //If there are errors in the validation process, create an array of the errors and send that to the client
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(error => error.msg);
     return res.status(400).json({errors: errorMessages})
   }
 
   const user = req.body;
-  user.password = bcrypt.hashSync(user.password, 10)
-  await User.create(user)
-  res.location('/');
-  res.status(201).end();
+  const regex = RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
+
+  if (regex.test(req.body.emailAddress)) {
+    user.password = bcrypt.hashSync(user.password, 10)
+    await User.create(user)
+    res.location('/');
+    res.status(201).end();
+  } else {
+    res.status(400).json({message: 'Please provide a valid email address'})
+  }
+
+
 }));
 
 module.exports = router

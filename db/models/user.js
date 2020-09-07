@@ -1,6 +1,8 @@
 const {DataTypes, Sequelize} = require('sequelize');
 const Course = require('./course');
 
+//Create the User model with specific attributes and requirements
+
 module.exports = (sequelize) => {
     class User extends Sequelize.Model {}
     User.init(

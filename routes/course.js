@@ -1,3 +1,4 @@
+//Import all dependencies to insure the course route can operate properly
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
@@ -9,52 +10,58 @@ const {check, validationResult} = require('express-validator');
 
 // Async/await middleware
 function asyncHandler(cb) {
-    return async (req, res, next) => {
-      try {
-        await cb(req, res, next);
-      } catch (err) {
-        err = new Error();
-        err.status = 500;
-        err.message = `Looks like the course you requested doesn't exist`;
-        next(err);
-      }
-    };
-  }
+  return async (req, res, next) => {
+    try {
+      await cb(req, res, next);
+    } catch (err) {
+      err = new Error();
+      err.status = 500;
+      err.message = `Looks like the course you requested doesn't exist`;
+      next(err);
+    }
+  };
+}
 
-  const userAuthentication = async (req, res, next) => {
-    let message = null;
-    const credentials = auth(req);
-    if (credentials) {
-      const user = await User.findOne({
-        where: {
-          emailAddress: credentials.name
-        }
-      })
-      const password = user.password;
-      if (user) {
-        const authenticated = bcrypt
-          .compareSync(credentials.pass, password)
-        
-        if (authenticated) {
-          req.currentUser = user
-        }  else {
-          message = `Authentication failure for Username: ${credentials.name}`
-        }
-      } else {
-        message = `User not found for Username: ${credentials.name}`
+//Middleware to authenticate the user for the API
+const userAuthentication = async (req, res, next) => {
+  let message = null;
+  const credentials = auth(req);
+
+  //Check to ensure that the user has input credentials
+  if (credentials) {
+    const user = await User.findOne({
+      where: {
+        emailAddress: credentials.name
+      }
+    })
+    const password = user.password;
+
+    //Check to ensure that the username entered by the user matches an email in the database
+    if (user) {
+      const authenticated = bcrypt
+        .compareSync(credentials.pass, password)
+
+      //Check to ensure that the password entered by the user matches the password in the database
+      if (authenticated) {
+        req.currentUser = user
+      }  else {
+        message = `Authentication failure for Username: ${credentials.name}`
       }
     } else {
-      message = 'Auth header not found';
+      message = `User not found for Username: ${credentials.name}`
     }
-
-    if (message) {
-      console.warn(message)
-
-      res.status(401).json({message: 'Access Denied'})
-    } else {
-      next();
-    }
+  } else {
+    message = 'Auth header not found';
   }
+
+  if (message) {
+    console.warn(message)
+
+    res.status(401).json({message: 'Access Denied'})
+  } else {
+    next();
+  }
+}
 
 
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
@@ -81,10 +88,13 @@ router.post('/courses', asyncHandler(userAuthentication),[
   const user = req.currentUser;
   const errors = validationResult(req);
 
+  //If there are errors in the validation process, create an array of the errors and send that to the client
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(error => error.msg);
     return res.status(400).json({errors: errorMessages})
   }
+
+  //If the user is authenticated, allow them to create a new course
   if (user) {
     const course = await Course.create({
       title: req.body.title,
@@ -113,17 +123,20 @@ router.put('/courses/:id', asyncHandler(userAuthentication), [
   const user = req.currentUser;
   const errors = validationResult(req);
 
+  //If there are errors in the validation process, create an array of the errors and send that to the client
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(error => error.msg);
     return res.status(400).json({errors: errorMessages})
   }
 
   const course = await Course.findByPk(req.params.id)
+
+  //If the user is authenticated, allow them to update the course but only if they are the creator of the course
   if (course.userId === user.id) {
     await course.update(req.body)
     res.status(204).end();
   } else {
-    res.status(401).json({message: "Sorry, you don't have permission to edit this course"})
+    res.status(403).json({message: "Sorry, you don't have permission to edit this course"})
   }
 }));
 
@@ -131,13 +144,14 @@ router.put('/courses/:id', asyncHandler(userAuthentication), [
 router.delete('/courses/:id', asyncHandler(userAuthentication), asyncHandler(async (req, res) => {
   const user = req.currentUser;
   const course = await Course.findByPk(req.params.id);
+
+  //If the user is authenticated, allow them to delete a course but only if they are the creator of that course
   if (course.userId === user.id) {
     await course.destroy();
     res.status(204).end();
   } else {
-    res.status(401).json({message: "Sorry, you don't have permission to delete this course"})
+    res.status(403).json({message: "Sorry, you don't have permission to delete this course"})
   }
-
 }));
 
 module.exports = router;
