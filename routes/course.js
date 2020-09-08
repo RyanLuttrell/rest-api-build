@@ -140,7 +140,7 @@ router.put('/courses/:id', asyncHandler(userAuthentication), [
     await course.update(req.body)
     res.status(204).end();
   } else {
-    res.status(403).json({message: "Sorry, you don't have permission to edit this course"})
+    res.status(401).json({message: "Sorry, you don't have permission to edit this course"})
   }
 }));
 
@@ -154,7 +154,7 @@ router.delete('/courses/:id', asyncHandler(userAuthentication), asyncHandler(asy
     await course.destroy();
     res.status(204).end();
   } else {
-    res.status(403).json({message: "Sorry, you don't have permission to delete this course"})
+    res.status(401).json({message: "Sorry, you don't have permission to delete this course"})
   }
 }));
 

@@ -101,10 +101,19 @@ router.post('/users', [
   const regex = RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
 
   if (regex.test(req.body.emailAddress)) {
-    user.password = bcrypt.hashSync(user.password, 10)
-    await User.create(user)
-    res.location('/');
-    res.status(201).end();
+    const userCheck = await User.findAll({
+      where: {
+        emailAddress: req.body.emailAddress
+      }
+    })
+    if (userCheck.length === 0) {
+      user.password = bcrypt.hashSync(user.password, 10)
+      await User.create(user)
+      res.location('/');
+      res.status(201).end();
+    } else {
+      res.status(400).json({message: "Sorry, that email address already exists"})
+    }
   } else {
     res.status(400).json({message: 'Please provide a valid email address'})
   }
