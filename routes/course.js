@@ -66,13 +66,17 @@ const userAuthentication = async (req, res, next) => {
 
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
 router.get('/courses', asyncHandler(async (req, res) => {
-  const courses = await Course.findAll();
+  const courses = await Course.findAll({
+    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId']
+  });
   res.status(200).json(courses);
 }));
 
 // GET /api/courses/:id 200 - Returns the course (including the user that owns the course) for the provided course ID
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  const course = await Course.findByPk(req.params.id);
+  const course = await Course.findByPk(req.params.id, {
+    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId']
+  });
   res.status(200).json(course);
 }));
 

@@ -66,7 +66,11 @@ function asyncHandler(cb) {
 // GET /api/users 200 - Returns the currently authenticated user
 router.get('/users',asyncHandler(userAuthentication), asyncHandler(async (req, res) => {
   const user = req.currentUser;
-  res.status(200).json(user)
+  res.status(200).json({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    emailAddress: user.emailAddress
+  })
 }));
 
 // POST /api/users 201 - Creates a user, sets the Location header to "/", and returns no content
