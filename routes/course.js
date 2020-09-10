@@ -67,7 +67,8 @@ const userAuthentication = async (req, res, next) => {
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
 router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll({
-    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId']
+    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId'],
+    include: User
   });
   res.status(200).json(courses);
 }));
@@ -75,7 +76,8 @@ router.get('/courses', asyncHandler(async (req, res) => {
 // GET /api/courses/:id 200 - Returns the course (including the user that owns the course) for the provided course ID
 router.get('/courses/:id', asyncHandler(async (req, res) => {
   const course = await Course.findByPk(req.params.id, {
-    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId']
+    attributes: ['title', 'description', 'estimatedTime', 'materialsNeeded', 'userId'],
+    include: User
   });
   res.status(200).json(course);
 }));
@@ -140,7 +142,7 @@ router.put('/courses/:id', asyncHandler(userAuthentication), [
     await course.update(req.body)
     res.status(204).end();
   } else {
-    res.status(401).json({message: "Sorry, you don't have permission to edit this course"})
+    res.status(403).json({message: "Sorry, you don't have permission to edit this course"})
   }
 }));
 
@@ -154,7 +156,7 @@ router.delete('/courses/:id', asyncHandler(userAuthentication), asyncHandler(asy
     await course.destroy();
     res.status(204).end();
   } else {
-    res.status(401).json({message: "Sorry, you don't have permission to delete this course"})
+    res.status(403).json({message: "Sorry, you don't have permission to delete this course"})
   }
 }));
 
